@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,9 +48,9 @@ class CoachViewModel @Inject constructor(
 
     private fun sendGreetingIfEmpty() {
         viewModelScope.launch {
-            // Nur beim ersten Mal (keine Nachrichten vorhanden)
-            val current = _uiState.value.messages
-            if (current.isEmpty()) {
+            // Aus der DB laden um sicherzugehen (nicht den noch-leeren State verwenden)
+            val existingMessages = coachRepository.getChatHistory().first()
+            if (existingMessages.isEmpty()) {
                 coachRepository.sendGreeting()
             }
         }

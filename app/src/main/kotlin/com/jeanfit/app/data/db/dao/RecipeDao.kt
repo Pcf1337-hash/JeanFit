@@ -43,4 +43,7 @@ interface RecipeDao {
 
     @Query("DELETE FROM meal_plan WHERE dateEpochDay = :dayEpoch AND mealType = :mealType")
     suspend fun deleteMealPlan(dayEpoch: Long, mealType: String)
+
+    @Query("DELETE FROM recipes WHERE recipeId LIKE 'mealdb_%'")
+    suspend fun deleteMealDbRecipes()
 }

@@ -40,6 +40,9 @@ interface FoodDao {
     @Query("DELETE FROM food_log_entries WHERE id = :id")
     suspend fun deleteLogEntry(id: Long)
 
+    @Query("UPDATE food_log_entries SET servingMultiplier = :multiplier, servingSizeG = :sizeG, calories = :calories, protein = :protein, carbs = :carbs, fat = :fat WHERE id = :id")
+    suspend fun updateLogEntry(id: Long, multiplier: Float, sizeG: Float, calories: Float, protein: Float, carbs: Float, fat: Float)
+
     @Query("SELECT * FROM food_log_entries WHERE logDateEpochDay = :dayEpoch ORDER BY loggedAtMs ASC")
     fun getEntriesForDay(dayEpoch: Long): Flow<List<FoodLogEntry>>
 

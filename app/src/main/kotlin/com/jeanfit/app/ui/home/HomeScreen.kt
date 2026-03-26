@@ -3,7 +3,6 @@ package com.jeanfit.app.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
@@ -17,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jeanfit.app.data.db.entities.FoodLogEntry
 import com.jeanfit.app.ui.theme.*
 import com.jeanfit.app.ui.update.UpdateViewModel
 import kotlin.math.min
@@ -25,6 +24,7 @@ import kotlin.math.min
 @Composable
 fun HomeScreen(
     onLogFood: (String) -> Unit,
+    onSettings: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -76,6 +76,14 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
+                            // Einstellungen
+                            IconButton(onClick = onSettings) {
+                                Icon(
+                                    Icons.Filled.Settings,
+                                    contentDescription = "Einstellungen",
+                                    tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                )
+                            }
                             // Manueller Update-Check
                             if (updateViewModel != null) {
                                 IconButton(
@@ -134,7 +142,9 @@ fun HomeScreen(
                 mealType = mealType,
                 label = label,
                 entries = entries,
-                onAdd = { onLogFood(mealType) }
+                onAdd = { onLogFood(mealType) },
+                onDelete = viewModel::deleteLogEntry,
+                onEdit = { entry, multiplier -> viewModel.updateLogEntryServings(entry, multiplier) }
             )
         }
 
@@ -215,10 +225,46 @@ private fun CalorieStat(label: String, value: String, color: androidx.compose.ui
 private fun MealCard(
     mealType: String,
     label: String,
-    entries: List<com.jeanfit.app.data.db.entities.FoodLogEntry>,
-    onAdd: () -> Unit
+    entries: List<FoodLogEntry>,
+    onAdd: () -> Unit,
+    onDelete: (Long) -> Unit,
+    onEdit: (FoodLogEntry, Float) -> Unit
 ) {
     val totalCal = entries.sumOf { it.calories.toDouble() }.toInt()
+    var editingEntry by remember { mutableStateOf<FoodLogEntry?>(null) }
+
+    // Edit-Dialog
+    editingEntry?.let { entry ->
+        var multiplier by remember { mutableFloatStateOf(entry.servingMultiplier) }
+        AlertDialog(
+            onDismissRequest = { editingEntry = null },
+            title = { Text(entry.foodName.ifBlank { "Eintrag bearbeiten" }, style = MaterialTheme.typography.titleMedium) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Portionsmenge: ${"%.1f".format(multiplier)}×  (${(entry.servingSizeG / entry.servingMultiplier * multiplier).toInt()} g)",
+                        style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = multiplier,
+                        onValueChange = { multiplier = it },
+                        valueRange = 0.25f..5f,
+                        steps = 18,
+                        colors = SliderDefaults.colors(thumbColor = SunsetOrange, activeTrackColor = SunsetOrange)
+                    )
+                    Text("≈ ${(entry.calories / entry.servingMultiplier * multiplier).toInt()} kcal",
+                        style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = SunsetOrange)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onEdit(entry, multiplier); editingEntry = null }) {
+                    Text("Speichern", color = SunsetOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingEntry = null }) { Text("Abbrechen") }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         shape = MaterialTheme.shapes.large,
@@ -250,20 +296,56 @@ private fun MealCard(
                 )
             } else {
                 entries.forEach { entry ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                onDelete(entry.id); true
+                            } else false
+                        }
+                    )
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false,
+                        backgroundContent = {
+                            Box(
+                                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Löschen",
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.padding(end = 16.dp))
+                            }
+                        }
                     ) {
-                        Text(
-                            entry.colorCategory.toEmoji() + " " + entry.foodId.take(20),
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            "${entry.calories.toInt()} kcal",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                entry.colorCategory.toEmoji() + " " + entry.foodName.ifBlank { entry.foodId.take(20) },
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "${entry.calories.toInt()} kcal",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                IconButton(
+                                    onClick = { editingEntry = entry },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(Icons.Filled.Edit, contentDescription = "Bearbeiten",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(14.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }

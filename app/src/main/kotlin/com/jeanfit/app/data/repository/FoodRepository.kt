@@ -59,6 +59,9 @@ class FoodRepository @Inject constructor(
 
     suspend fun deleteLogEntry(id: Long) = dao.deleteLogEntry(id)
 
+    suspend fun updateLogEntry(id: Long, multiplier: Float, sizeG: Float, calories: Float, protein: Float, carbs: Float, fat: Float) =
+        dao.updateLogEntry(id, multiplier, sizeG, calories, protein, carbs, fat)
+
     fun getEntriesForDay(dayEpoch: Long): Flow<List<FoodLogEntry>> = dao.getEntriesForDay(dayEpoch)
 
     fun getCaloriesForDay(dayEpoch: Long): Flow<Float?> = dao.getCaloriesForDay(dayEpoch)
@@ -66,7 +69,10 @@ class FoodRepository @Inject constructor(
 
 private fun OFFProduct.toFoodItem(calcColorCategory: CalcColorCategoryUseCase): FoodItem? {
     val name = productName?.takeIf { it.isNotBlank() } ?: return null
-    val cal = nutriments?.energyKcal100g ?: (nutriments?.energyKj100g?.let { it / 4.184f }) ?: return null
+    // Accept products with unknown calories (shown as 0) — better than showing no results
+    val cal = nutriments?.energyKcal100g
+        ?: (nutriments?.energyKj100g?.let { it / 4.184f })
+        ?: 0f
     return FoodItem(
         foodId = barcode ?: UUID.randomUUID().toString(),
         name = name,
@@ -77,9 +83,30 @@ private fun OFFProduct.toFoodItem(calcColorCategory: CalcColorCategoryUseCase): 
         carbsPer100g = nutriments?.carbs100g ?: 0f,
         fatPer100g = nutriments?.fat100g ?: 0f,
         fiberPer100g = nutriments?.fiber100g,
-        defaultServingSizeG = 100f,
+        defaultServingSizeG = parseServingSize(servingSize),
         colorCategory = calcColorCategory.calculate(cal),
         calorieDensity = cal / 100f,
-        source = "openfoodfacts"
+        source = "openfoodfacts",
+        unit = if (isLiquid(servingSize, name)) "ml" else "g"
     )
+}
+
+/** Prüft anhand des Serving-Size-Strings und Namens ob es sich um ein Getränk handelt */
+private fun isLiquid(servingSize: String?, name: String): Boolean {
+    val sLower = servingSize?.lowercase() ?: ""
+    val nLower = name.lowercase()
+    // Explizite ml/cl/l Einheit im Serving Size
+    if (sLower.contains("ml") || sLower.contains(" cl") || Regex("\\d+\\s*l\\b").containsMatchIn(sLower)) return true
+    // Typische Getränke-Keywords im Produktnamen
+    val drinkKeywords = listOf("wasser", "water", "saft", "juice", "milch", "milk", "tee", "tea",
+        "kaffee", "coffee", "bier", "beer", "wein", "wine", "limonade", "limo", "cola",
+        "energy drink", "smoothie", "getränk", "drink", "soda", "brause", "nektar", "nectar")
+    return drinkKeywords.any { nLower.contains(it) }
+}
+
+/** Extrahiert Portionsgröße aus String wie "250ml" oder "100 g" */
+private fun parseServingSize(servingSize: String?): Float {
+    if (servingSize == null) return 100f
+    val number = Regex("(\\d+(?:\\.\\d+)?)").find(servingSize)?.groupValues?.get(1)?.toFloatOrNull()
+    return number?.takeIf { it in 5f..1000f } ?: 100f
 }

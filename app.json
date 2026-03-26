@@ -1,0 +1,9 @@
+{
+  "name": "JeanFit",
+  "versionCode": 3,
+  "versionName": "1.2.0",
+  "minSdk": 26,
+  "targetSdk": 36,
+  "packageName": "com.jeanfit.app",
+  "latestReleaseUrl": "https://api.github.com/repos/SeiT0bi/JeanFit/releases/latest"
+}

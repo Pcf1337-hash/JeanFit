@@ -46,4 +46,7 @@ sealed class Screen(val route: String) {
 
     // KI-Coach
     data object Coach : Screen("main/coach")
+
+    // Settings
+    data object Settings : Screen("main/settings")
 }

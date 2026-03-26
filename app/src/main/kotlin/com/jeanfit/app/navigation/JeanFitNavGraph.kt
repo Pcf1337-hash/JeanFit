@@ -5,11 +5,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
+import com.jeanfit.app.ui.onboarding.OnboardingViewModel
 import com.jeanfit.app.ui.coach.CoachChatScreen
 import com.jeanfit.app.ui.home.HomeScreen
 import com.jeanfit.app.ui.learn.CourseMapScreen
@@ -32,6 +36,7 @@ import com.jeanfit.app.ui.tools.RecipeListScreen
 import com.jeanfit.app.ui.tools.ToolsScreen
 import com.jeanfit.app.ui.foodlog.BarcodeScannerScreen
 import com.jeanfit.app.ui.foodlog.FoodSearchScreen
+import com.jeanfit.app.ui.settings.SettingsScreen
 
 @Composable
 fun JeanFitNavGraph(
@@ -44,60 +49,82 @@ fun JeanFitNavGraph(
         enterTransition = { fadeIn(tween(200)) },
         exitTransition = { fadeOut(tween(200)) }
     ) {
-        // Onboarding
-        composable(Screen.Welcome.route) {
-            WelcomeScreen(onNext = { navController.navigate(Screen.GoalWeight.route) })
-        }
-        composable(Screen.GoalWeight.route) {
-            GoalWeightScreen(
-                onNext = { navController.navigate(Screen.CurrentWeight.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.CurrentWeight.route) {
-            CurrentWeightScreen(
-                onNext = { navController.navigate(Screen.GenderAgeHeight.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.GenderAgeHeight.route) {
-            GenderAgeHeightScreen(
-                onNext = { navController.navigate(Screen.ActivityLevel.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.ActivityLevel.route) {
-            ActivityLevelScreen(
-                onNext = { navController.navigate(Screen.HealthConditions.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.HealthConditions.route) {
-            HealthConditionsScreen(
-                onNext = { navController.navigate(Screen.Motivation.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.Motivation.route) {
-            MotivationScreen(
-                onNext = { navController.navigate(Screen.CalorieCalculation.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.CalorieCalculation.route) {
-            CalorieCalculationScreen(
-                onNext = { navController.navigate(Screen.ProfileCreated.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.ProfileCreated.route) {
-            ProfileCreatedScreen(
-                onFinish = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Welcome.route) { inclusive = true }
+        // Onboarding — alle Screens teilen EINE ViewModel-Instanz via Parent-BackStackEntry
+        navigation(startDestination = Screen.Welcome.route, route = "onboarding_graph") {
+            composable(Screen.Welcome.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                WelcomeScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.GoalWeight.route) }
+                )
+            }
+            composable(Screen.GoalWeight.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                GoalWeightScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.CurrentWeight.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.CurrentWeight.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                CurrentWeightScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.GenderAgeHeight.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.GenderAgeHeight.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                GenderAgeHeightScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.ActivityLevel.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.ActivityLevel.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                ActivityLevelScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.HealthConditions.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.HealthConditions.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                HealthConditionsScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.Motivation.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Motivation.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                MotivationScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.CalorieCalculation.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.CalorieCalculation.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                CalorieCalculationScreen(
+                    viewModel = hiltViewModel(parent),
+                    onNext = { navController.navigate(Screen.ProfileCreated.route) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.ProfileCreated.route) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry("onboarding_graph") }
+                ProfileCreatedScreen(
+                    viewModel = hiltViewModel(parent),
+                    onFinish = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo("onboarding_graph") { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         // Main
@@ -105,7 +132,8 @@ fun JeanFitNavGraph(
             HomeScreen(
                 onLogFood = { mealType ->
                     navController.navigate(Screen.FoodSearch.createRoute(mealType))
-                }
+                },
+                onSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
         composable(Screen.Progress.route) {
@@ -190,6 +218,11 @@ fun JeanFitNavGraph(
                 onBack = { navController.popBackStack() },
                 onBarcodeFound = { navController.popBackStack() }
             )
+        }
+
+        // Einstellungen
+        composable(Screen.Settings.route) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         // KI-Coach

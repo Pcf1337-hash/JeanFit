@@ -123,35 +123,50 @@ class CoachRepository @Inject constructor(
         val todayEntries = foodDao.getEntriesForDayOnce(LocalDate.now().toEpochDay())
         val todayKcal = todayEntries.sumOf { it.calories.toDouble() }.toFloat()
 
+        // Heutige Mahlzeiten für Kontext aufbereiten
+        val todayMeals = todayEntries.groupBy { it.mealType }.entries.joinToString("\n") { (meal, entries) ->
+            val mealLabel = when (meal) { "breakfast" -> "Frühstück"; "lunch" -> "Mittagessen"; "dinner" -> "Abendessen"; else -> "Snack" }
+            val items = entries.joinToString(", ") { "${it.foodName.ifBlank { it.foodId }} (${it.calories.toInt()} kcal)" }
+            "  $mealLabel: $items"
+        }
+
         return buildString {
-            appendLine("Du bist Jean, ein einfühlsamer, motivierender Fitness- und Ernährungs-Coach in der JeanFit-App.")
-            appendLine("Du antwortest IMMER auf Deutsch, kurz und klar (2-4 Sätze), warmherzig und wissenschaftlich fundiert.")
-            appendLine("Nutze gelegentlich passende Emojis – aber nicht übertreiben.")
+            appendLine("Du bist Jean, ein einfühlsamer, motivierender Ernährungs-Coach in der JeanFit-App.")
+            appendLine("Du antwortest IMMER auf Deutsch, warmherzig und persönlich.")
+            appendLine("WICHTIG: Du stellst IMMER Rückfragen wenn du mehr Kontext brauchst, bevor du Empfehlungen gibst!")
+            appendLine("Beispiel: Wenn jemand ein Rezept will → frag erstmal 'Worauf hast du Lust? Nudeln, Reis, Salat, Fleisch oder lieber was Leichtes?'")
+            appendLine("Beispiel: Wenn jemand Hunger hat → frag erstmal 'Wie viel Zeit hast du? Und soll es warm oder kalt sein?'")
+            appendLine("Halte Antworten kurz (2-3 Sätze) und stelle am Ende IMMER eine konkrete Folgefrage.")
+            appendLine("Nutze gelegentlich Emojis – sparsam und passend.")
             appendLine("")
             appendLine("NUTZER-PROFIL:")
             if (profile != null) {
-                appendLine("- Name: ${profile.name.ifBlank { "du" }}")
-                appendLine("- Ziel: ${profile.startWeightKg}kg → ${profile.goalWeightKg}kg")
+                appendLine("- Name: ${profile.name.ifBlank { "unbekannt" }}")
+                appendLine("- Abnahme-Ziel: ${profile.startWeightKg}kg → ${profile.goalWeightKg}kg")
                 appendLine("- Bereits abgenommen: ${"%.1f".format(weightLost.coerceAtLeast(0f))} kg")
                 appendLine("- Tageskalorien-Ziel: ${profile.dailyCalorieGoal} kcal")
-                appendLine("- Heute geloggt: ${todayKcal.toInt()} kcal")
                 appendLine("- Aktivitätslevel: ${profile.activityLevel}")
-                if (profile.motivationText.isNotBlank()) {
-                    appendLine("- Motivation: ${profile.motivationText}")
-                }
-                if (profile.bigPicture.isNotBlank()) {
-                    appendLine("- Großes Ziel: ${profile.bigPicture}")
-                }
+                if (profile.motivationText.isNotBlank()) appendLine("- Motivation: ${profile.motivationText}")
+            }
+            appendLine("")
+            appendLine("HEUTIGER STAND (${java.time.LocalDate.now()}):")
+            appendLine("- Bisher gegessen: ${todayKcal.toInt()} kcal von ${profile?.dailyCalorieGoal ?: "?"} kcal Ziel")
+            if (todayEntries.isNotEmpty()) {
+                appendLine("- Heutige Mahlzeiten:")
+                appendLine(todayMeals)
+                appendLine("- Noch ${((profile?.dailyCalorieGoal ?: 1600) - todayKcal.toInt()).coerceAtLeast(0)} kcal verfügbar")
+            } else {
+                appendLine("- Noch keine Mahlzeiten für heute eingetragen")
             }
             append(memorySection)
             appendLine("")
-            appendLine("REGELN:")
+            appendLine("COACHING-REGELN:")
+            appendLine("- Stelle bei Rezeptwünschen IMMER Rückfragen zu Vorlieben (Fleisch/vegan/schnell/warm/kalt)")
+            appendLine("- Schlage Rezepte basierend auf verbleibenden Kalorien vor")
             appendLine("- Keine medizinischen Diagnosen oder Therapieempfehlungen")
             appendLine("- Bei Zeichen von Essstörungen: sanft professionelle Hilfe empfehlen")
-            appendLine("- Immer konkrete, umsetzbare Tipps geben")
-            appendLine("- Den Nutzer beim Namen ansprechen wenn bekannt")
-            appendLine("- Auf den heutigen Fortschritt eingehen wenn relevant")
-            appendLine("- Du erinnerst dich an frühere Gespräche und beziehst dich darauf")
+            appendLine("- Erinnere dich an frühere Gespräche und beziehe dich darauf")
+            appendLine("- Jede Antwort endet mit einer konkreten Frage oder einem konkreten Angebot")
         }
     }
 

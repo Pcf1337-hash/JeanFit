@@ -6,6 +6,25 @@ A full-featured Android nutrition and weight-loss coaching app — inspired by N
 
 ---
 
+## What's New in v1.2.0
+
+- **Settings Screen** — manage everything in one place
+  - Edit name, goal weight, height, activity level, calorie target
+  - Recalculate daily calories (Harris-Benedict) with a single tap
+  - Set water goal & step goal
+  - View profile info: gender, age, coins, programme days
+- **125 German Recipes** — full recipe book with breakfast, lunch, dinner, snacks, desserts
+  - All recipes in German with ingredients, steps, calorie data and colour categories
+  - Replaced all English MealDB entries from previous versions
+- **Meal Planner reworked** — day-by-day planning with recipe picker and daily calorie summary
+- **Food log editing** — swipe to delete or tap to edit serving size of any logged item
+- **Coach improvements**
+  - Does not greet on every app start — only on first use
+  - Sees your actual meals for today and gives contextual advice
+  - Asks follow-up questions before giving recipe recommendations
+  - Chat history persisted across sessions
+- **Learn section** — 7 full courses × 5 lessons = 35 lessons with quizzes, activities & reflections
+
 ## What's New in v1.1.0
 
 - **Jean — KI-Coach** powered by Claude Haiku (real Claude API, not offline fallback)

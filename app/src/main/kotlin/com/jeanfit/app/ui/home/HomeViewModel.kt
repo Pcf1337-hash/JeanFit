@@ -73,6 +73,26 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun deleteLogEntry(entryId: Long) {
+        viewModelScope.launch { foodRepository.deleteLogEntry(entryId) }
+    }
+
+    fun updateLogEntryServings(entry: FoodLogEntry, newMultiplier: Float) {
+        viewModelScope.launch {
+            val newSizeG = entry.servingSizeG / entry.servingMultiplier * newMultiplier
+            val ratio = newMultiplier / entry.servingMultiplier
+            foodRepository.updateLogEntry(
+                id = entry.id,
+                multiplier = newMultiplier,
+                sizeG = newSizeG,
+                calories = entry.calories * ratio,
+                protein = entry.protein * ratio,
+                carbs = entry.carbs * ratio,
+                fat = entry.fat * ratio
+            )
+        }
+    }
+
     private suspend fun checkAndAwardCoin() {
         val task = gamificationDao.getDailyTaskOnce(today) ?: return
         if (task.weightLogged && task.allMealsLogged && task.lessonCompleted) {
