@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Zugriff auf internen Cache-Ordner (für APK-Download) -->
+    <cache-path name="cache" path="." />
+    <!-- Für externe Downloads (Android <= 9) -->
+    <external-cache-path name="external_cache" path="." />
+</paths>

@@ -1,6 +1,8 @@
 package com.jeanfit.app.di
 
 import com.jeanfit.app.BuildConfig
+import com.jeanfit.app.data.api.ClaudeApi
+import com.jeanfit.app.data.api.GithubApi
 import com.jeanfit.app.data.api.OpenFoodFactsApi
 import com.jeanfit.app.data.api.UsdaFoodApi
 import com.squareup.moshi.Moshi
@@ -31,7 +33,8 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)  // Claude kann etwas länger brauchen
+        .writeTimeout(30, TimeUnit.SECONDS)
         .apply {
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply {
@@ -61,6 +64,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("CLAUDE")
+    fun provideClaudeRetrofit(client: OkHttpClient, moshi: Moshi): Retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.CLAUDE_BASE_URL)
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    @Provides
+    @Singleton
     fun provideOpenFoodFactsApi(@Named("OFF") retrofit: Retrofit): OpenFoodFactsApi =
         retrofit.create(OpenFoodFactsApi::class.java)
 
@@ -68,4 +80,23 @@ object NetworkModule {
     @Singleton
     fun provideUsdaFoodApi(@Named("USDA") retrofit: Retrofit): UsdaFoodApi =
         retrofit.create(UsdaFoodApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideClaudeApi(@Named("CLAUDE") retrofit: Retrofit): ClaudeApi =
+        retrofit.create(ClaudeApi::class.java)
+
+    @Provides
+    @Singleton
+    @Named("GITHUB")
+    fun provideGithubRetrofit(client: OkHttpClient, moshi: Moshi): Retrofit = Retrofit.Builder()
+        .baseUrl("https://api.github.com/")
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    @Provides
+    @Singleton
+    fun provideGithubApi(@Named("GITHUB") retrofit: Retrofit): GithubApi =
+        retrofit.create(GithubApi::class.java)
 }

@@ -1,3 +1,10 @@
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(f.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -14,19 +21,32 @@ android {
         applicationId = "com.jeanfit.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "USDA_API_KEY", "\"DEMO_KEY\"")
         buildConfigField("String", "OFF_BASE_URL", "\"https://world.openfoodfacts.org/\"")
         buildConfigField("String", "USDA_BASE_URL", "\"https://api.nal.usda.gov/\"")
+        buildConfigField("String", "CLAUDE_API_KEY", "\"${localProperties["CLAUDE_API_KEY"] ?: ""}\"")
+        buildConfigField("String", "CLAUDE_BASE_URL", "\"https://api.anthropic.com/\"")
+        buildConfigField("String", "GITHUB_RELEASES_URL", "\"https://api.github.com/repos/Pcf1337-hash/JeanFit/releases/latest\"")
+    }
+
+    signingConfigs {
+        create("releaseConfig") {
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("releaseConfig")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

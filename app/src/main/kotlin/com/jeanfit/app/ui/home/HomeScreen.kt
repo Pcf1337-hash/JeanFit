@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,7 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jeanfit.app.ui.theme.*
+import com.jeanfit.app.ui.update.UpdateViewModel
 import kotlin.math.min
 
 @Composable
@@ -25,6 +28,12 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    // Activity-scoped UpdateViewModel für manuellen Check
+    val activity = LocalActivity.current as? androidx.activity.ComponentActivity
+    val updateViewModel: UpdateViewModel? = if (activity != null) {
+        hiltViewModel(viewModelStoreOwner = activity)
+    } else null
+    val updateState by (updateViewModel?.state?.collectAsState() ?: remember { mutableStateOf(null) })
 
     if (state.isLoading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -67,6 +76,22 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
+                            // Manueller Update-Check
+                            if (updateViewModel != null) {
+                                IconButton(
+                                    onClick = { updateViewModel.checkForUpdateManually() },
+                                    enabled = updateState?.isChecking != true
+                                ) {
+                                    Icon(
+                                        if (updateState?.isChecking == true)
+                                            Icons.Filled.Sync
+                                        else
+                                            Icons.Filled.SystemUpdate,
+                                        contentDescription = "Update prüfen",
+                                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
                             Icon(
                                 Icons.Filled.MonetizationOn,
                                 contentDescription = "Coins",

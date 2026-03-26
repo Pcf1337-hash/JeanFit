@@ -2,53 +2,71 @@ package com.jeanfit.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// JeanFit Brand Colors
-val SunsetOrange = Color(0xFFFB513B)
-val SpringWood = Color(0xFFF6F4EE)
-val BlueDianne = Color(0xFF1D3A44)
-val BlueDianneLight = Color(0xFF2A5465)
+// === JeanFit Ocean Blue Design System ===
 
-// Food Color System
-val FoodGreen = Color(0xFF4CAF50)
+// Primär-Palette (Blau-Familie)
+val OceanBlue    = Color(0xFF1565C0)  // Primary CTAs, Buttons
+val SkyBlue      = Color(0xFF42A5F5)  // Akzente, Chips, Links
+val DeepNavy     = Color(0xFF0D2B4E)  // Headlines, dunkler Text
+val IceBlue      = Color(0xFFE3F2FD)  // Background (Light Mode)
+val MidnightBlue = Color(0xFF0A1929)  // Background (Dark Mode)
+
+// Sekundär
+val TealAccent   = Color(0xFF00BCD4)  // Sekundärer Akzent, Charts
+val PearlWhite   = Color(0xFFF8FAFF)  // Card-Hintergrund Light
+val CoachCardDark = Color(0xFF122136) // Card-Hintergrund Dark
+
+// Food Color System (Ampelsystem — bleibt neutral)
+val FoodGreen          = Color(0xFF2ECC71)
 val FoodGreenContainer = Color(0xFFE8F5E9)
-val FoodYellow = Color(0xFFFFC107)
+val FoodYellow         = Color(0xFFF39C12)
 val FoodYellowContainer = Color(0xFFFFF8E1)
-val FoodOrange = Color(0xFFFF6B35)
+val FoodOrange         = Color(0xFFE74C3C)
 val FoodOrangeContainer = Color(0xFFFFF3E0)
 
+// Gamification
+val CoinGold    = Color(0xFFFFD700)
+val StreakFire  = Color(0xFFFF6B35)
+
 // Light Theme
-val LightPrimary = SunsetOrange
-val LightOnPrimary = Color.White
-val LightPrimaryContainer = Color(0xFFFFDDD8)
-val LightOnPrimaryContainer = Color(0xFF5C0A00)
-val LightSecondary = BlueDianne
-val LightOnSecondary = Color.White
-val LightSecondaryContainer = Color(0xFFCDE6EF)
-val LightOnSecondaryContainer = Color(0xFF001F27)
-val LightBackground = SpringWood
-val LightOnBackground = BlueDianne
-val LightSurface = Color.White
-val LightOnSurface = BlueDianne
-val LightSurfaceVariant = Color(0xFFECEAE4)
-val LightOnSurfaceVariant = Color(0xFF4A4640)
-val LightOutline = Color(0xFF7B7670)
-val LightError = Color(0xFFBA1A1A)
-val LightOnError = Color.White
+val LightPrimary             = OceanBlue
+val LightOnPrimary           = Color.White
+val LightPrimaryContainer    = Color(0xFFD6E4FF)
+val LightOnPrimaryContainer  = Color(0xFF001A41)
+val LightSecondary           = TealAccent
+val LightOnSecondary         = Color.White
+val LightSecondaryContainer  = Color(0xFFB2EBF2)
+val LightOnSecondaryContainer = Color(0xFF001F24)
+val LightBackground          = IceBlue
+val LightOnBackground        = DeepNavy
+val LightSurface             = PearlWhite
+val LightOnSurface           = DeepNavy
+val LightSurfaceVariant      = Color(0xFFDAE2FF)
+val LightOnSurfaceVariant    = Color(0xFF44474F)
+val LightOutline             = Color(0xFF747780)
+val LightError               = Color(0xFFBA1A1A)
+val LightOnError             = Color.White
 
 // Dark Theme
-val DarkBackground = Color(0xFF121212)
-val DarkSurface = Color(0xFF1E1E1E)
-val DarkSurfaceVariant = Color(0xFF2C2C2C)
-val DarkOnSurface = Color(0xFFE8E0D8)
-val DarkOnBackground = Color(0xFFE8E0D8)
-val DarkPrimary = Color(0xFFFFB4A8)
-val DarkOnPrimary = Color(0xFF5C0A00)
-val DarkPrimaryContainer = Color(0xFF8C1900)
-val DarkOnPrimaryContainer = Color(0xFFFFDAD4)
-val DarkSecondary = Color(0xFF96CCD9)
-val DarkOnSecondary = Color(0xFF003642)
-val DarkSecondaryContainer = Color(0xFF004E5F)
-val DarkOnSecondaryContainer = Color(0xFFBBE9F7)
-val DarkOutline = Color(0xFF968F89)
-val DarkError = Color(0xFFFFB4AB)
-val DarkOnError = Color(0xFF690005)
+val DarkBackground    = MidnightBlue
+val DarkSurface       = Color(0xFF122136)
+val DarkSurfaceVariant = Color(0xFF1E3A5F)
+val DarkOnSurface     = Color(0xFFE2E8F4)
+val DarkOnBackground  = Color(0xFFE2E8F4)
+val DarkPrimary       = SkyBlue
+val DarkOnPrimary     = Color(0xFF00316E)
+val DarkPrimaryContainer = Color(0xFF004494)
+val DarkOnPrimaryContainer = Color(0xFFD6E4FF)
+val DarkSecondary     = TealAccent
+val DarkOnSecondary   = Color(0xFF003640)
+val DarkSecondaryContainer = Color(0xFF004D5B)
+val DarkOnSecondaryContainer = Color(0xFFB2EBF2)
+val DarkOutline       = Color(0xFF8E9099)
+val DarkError         = Color(0xFFFFB4AB)
+val DarkOnError       = Color(0xFF690005)
+
+// Kompatibilitäts-Aliase für bestehende Screens (Ocean Blue Rebranding)
+val SunsetOrange   = OceanBlue      // Primäre CTAs → jetzt OceanBlue
+val SpringWood     = IceBlue        // Background → jetzt IceBlue
+val BlueDianne     = DeepNavy       // Dunkler Text → jetzt DeepNavy
+val BlueDianneLight = Color(0xFF1E3A5F)

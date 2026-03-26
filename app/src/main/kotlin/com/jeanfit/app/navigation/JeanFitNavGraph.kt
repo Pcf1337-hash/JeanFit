@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.jeanfit.app.ui.coach.CoachChatScreen
 import com.jeanfit.app.ui.home.HomeScreen
 import com.jeanfit.app.ui.learn.CourseMapScreen
 import com.jeanfit.app.ui.learn.LessonListScreen
@@ -189,6 +190,15 @@ fun JeanFitNavGraph(
                 onBack = { navController.popBackStack() },
                 onBarcodeFound = { navController.popBackStack() }
             )
+        }
+
+        // KI-Coach
+        composable(
+            route = Screen.Coach.route,
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
+        ) {
+            CoachChatScreen(onBack = { navController.popBackStack() })
         }
     }
 }

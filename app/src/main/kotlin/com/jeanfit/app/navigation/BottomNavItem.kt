@@ -1,6 +1,7 @@
 package com.jeanfit.app.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
@@ -16,8 +17,9 @@ sealed class BottomNavItem(
     data object Progress : BottomNavItem(Screen.Progress, "Fortschritt", Icons.Filled.ShowChart)
     data object Tools : BottomNavItem(Screen.Tools, "Tools", Icons.Filled.FitnessCenter)
     data object Learn : BottomNavItem(Screen.Learn, "Lernen", Icons.Filled.MenuBook)
+    data object Coach : BottomNavItem(Screen.Coach, "Coach", Icons.Filled.ChatBubble)
 
     companion object {
-        val items = listOf(Home, Progress, Tools, Learn)
+        val items = listOf(Home, Progress, Tools, Learn, Coach)
     }
 }

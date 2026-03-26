@@ -16,6 +16,8 @@ import com.jeanfit.app.navigation.JeanFitNavGraph
 import com.jeanfit.app.navigation.Screen
 import com.jeanfit.app.ui.components.JeanFitBottomBar
 import com.jeanfit.app.ui.theme.JeanFitTheme
+import com.jeanfit.app.ui.update.UpdateBottomSheet
+import com.jeanfit.app.ui.update.UpdateViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,9 +27,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: MainViewModel = hiltViewModel()
-            val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
-            val onboardingCompleted by viewModel.onboardingCompleted.collectAsState(initial = false)
+            val mainViewModel: MainViewModel = hiltViewModel()
+            val updateViewModel: UpdateViewModel = hiltViewModel()
+
+            val isDarkMode by mainViewModel.isDarkMode.collectAsState(initial = false)
+            val onboardingCompleted by mainViewModel.onboardingCompleted.collectAsState(initial = false)
+            val coachUnread by mainViewModel.coachUnreadCount.collectAsState(initial = 0)
+            val updateState by updateViewModel.state.collectAsState()
 
             JeanFitTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
@@ -42,13 +48,27 @@ class MainActivity : ComponentActivity() {
                         JeanFitBottomBar(
                             navController = navController,
                             items = BottomNavItem.items,
-                            visibleOnRoutes = mainRoutes
+                            visibleOnRoutes = mainRoutes,
+                            coachUnreadCount = coachUnread
                         )
                     }
                 ) { _ ->
                     JeanFitNavGraph(
                         navController = navController,
                         startDestination = startDestination
+                    )
+                }
+
+                // Update-Dialog — zeigt sich automatisch oder auf manuelle Anfrage
+                if (updateState.isVisible && updateState.release != null) {
+                    UpdateBottomSheet(
+                        release = updateState.release!!,
+                        isDownloading = updateState.isDownloading,
+                        downloadProgress = updateState.downloadProgress,
+                        currentVersion = updateViewModel.getCurrentVersion(),
+                        onUpdate = { updateViewModel.startDownloadAndInstall() },
+                        onDismiss = { updateViewModel.dismiss() },
+                        onSkip = { updateViewModel.skipVersion() }
                     )
                 }
             }

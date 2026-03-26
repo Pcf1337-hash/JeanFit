@@ -2,17 +2,34 @@
 
 A full-featured Android nutrition and weight-loss coaching app — inspired by Noom. Built entirely offline-first with Jetpack Compose, Room DB, and Hilt.
 
+[![Download APK](https://img.shields.io/github/v/release/Pcf1337-hash/JeanFit?label=Download%20APK&color=1565C0)](https://github.com/Pcf1337-hash/JeanFit/releases/latest)
+
+---
+
+## What's New in v1.1.0
+
+- **Jean — KI-Coach** powered by Claude Haiku (real Claude API, not offline fallback)
+  - Personalized fitness & nutrition coaching
+  - Long-term memory: remembers your goals, milestones, and challenges
+  - Quick-reply chips for common questions
+  - Unread message badge on the Coach tab
+- **Ocean Blue Design System** — complete UI refresh (deep navy + sky blue)
+- **In-App Auto-Update** — checks GitHub Releases on startup + manual update button
+  - Download progress modal with changelog
+  - Version skip option
+  - Forced-update support for breaking changes
+
 ---
 
 ## Screenshots
 
-| Welcome | Home | Progress |
+| Welcome | Home | KI-Coach |
 |---------|------|----------|
-| Onboarding flow | Calorie dashboard | Weight tracking |
+| Onboarding flow | Calorie dashboard | Chat with Jean |
 
-| Learn | Tools |
-|-------|-------|
-| Course map + lesson reader | Food search, recipes, meal planner |
+| Progress | Learn | Update |
+|----------|-------|--------|
+| Weight tracking | Course map + lessons | In-app download modal |
 
 ---
 
@@ -33,6 +50,16 @@ A full-featured Android nutrition and weight-loss coaching app — inspired by N
 - Daily task checklist (weigh in, log meals, read lesson)
 - NoomCoin counter (gamification)
 - Personalized greeting
+- Manual update-check button (SystemUpdate icon)
+
+### KI-Coach Jean
+- Full chat interface with Claude Haiku AI
+- Remembers your: name, goals, current stats, past topics (stored in Room DB)
+- Dynamic system prompt built from live user data (calories today, activity level, etc.)
+- Time-aware greeting on first open
+- 8 quick-reply chips for fast questions
+- Clear chat option
+- Offline fallback messages if no internet
 
 ### Food Logging
 - Search via **OpenFoodFacts API** and **USDA FoodData Central**
@@ -70,6 +97,14 @@ A full-featured Android nutrition and weight-loss coaching app — inspired by N
 - Treat Day unlock at 5 coins (+20% calorie goal, no warnings)
 - Library unlock at 15 coins
 
+### Auto-Update
+- Checks GitHub Releases API on every app start (24h cooldown)
+- Manual check via header button
+- Download progress modal with animated progress bar
+- Scrollable changelog with markdown rendering
+- Version skip & "remind me later" options
+- Forced-update mode (set `FORCED_UPDATE: true` in release notes)
+
 ---
 
 ## Tech Stack
@@ -83,6 +118,7 @@ A full-featured Android nutrition and weight-loss coaching app — inspired by N
 | Database | Room 2.8.4 (offline-first) |
 | Navigation | Navigation Compose 2.9.6 |
 | Network | Retrofit 2.11.0 + OkHttp 5.3.2 + Moshi |
+| AI Coach | Claude Haiku API (`claude-haiku-4-5-20251001`) |
 | Camera | CameraX 1.4.1 |
 | Barcode | ML Kit Barcode Scanning 17.3.0 |
 | Images | Coil 3.1.0 |
@@ -102,29 +138,33 @@ A full-featured Android nutrition and weight-loss coaching app — inspired by N
 app/src/main/
 ├── data/
 │   ├── db/
-│   │   ├── JeanFitDatabase.kt        # Room DB, 12 entities
-│   │   ├── dao/                      # One DAO per entity group
-│   │   └── entities/                 # UserProfile, Food, Weight, Lessons, Gamification, Recipes
-│   ├── repository/                   # UserRepository, FoodRepository, WeightRepository, ...
-│   ├── api/                          # OpenFoodFactsApi, UsdaFoodApi (Retrofit)
+│   │   ├── JeanFitDatabase.kt        # Room DB, 14 entities (v2 with Coach tables)
+│   │   ├── dao/                      # One DAO per entity group + CoachDao
+│   │   └── entities/                 # UserProfile, Food, Weight, Lessons, Gamification, Recipes, Coach
+│   ├── repository/                   # UserRepository, FoodRepository, WeightRepository, CoachRepository
+│   ├── api/                          # OpenFoodFactsApi, UsdaFoodApi, ClaudeApi, GithubApi
 │   ├── datastore/                    # UserPreferences (dark mode, onboarding flag)
 │   └── model/
 ├── domain/
-│   └── usecase/
-│       ├── CalcCaloriesUseCase.kt    # Harris-Benedict formula
-│       ├── CalcTrendUseCase.kt       # Exponential moving average
-│       └── CalcColorCategoryUseCase.kt  # Green / yellow / orange
+│   ├── usecase/
+│   │   ├── CalcCaloriesUseCase.kt    # Harris-Benedict formula
+│   │   ├── CalcTrendUseCase.kt       # Exponential moving average
+│   │   └── CalcColorCategoryUseCase.kt
+│   └── update/
+│       └── AppUpdateManager.kt       # GitHub Releases check + OkHttp download + FileProvider install
 ├── ui/
-│   ├── theme/                        # JeanFit brand colors, typography
+│   ├── theme/                        # Ocean Blue design system
 │   ├── onboarding/                   # 8-step onboarding flow
-│   ├── home/                         # Dashboard
+│   ├── home/                         # Dashboard + update trigger
+│   ├── coach/                        # CoachChatScreen + CoachViewModel
+│   ├── update/                       # UpdateBottomSheet + UpdateViewModel
 │   ├── foodlog/                      # Search + barcode scanner
 │   ├── progress/                     # Weight chart + history
 │   ├── learn/                        # Course map, lesson list, lesson reader
 │   ├── tools/                        # Tools hub, recipes, meal planner
-│   └── components/                   # JeanFitBottomBar, shared composables
-├── navigation/                       # NavGraph, Screen routes, BottomNavItem
-├── di/                               # DatabaseModule, NetworkModule (Hilt)
+│   └── components/                   # JeanFitBottomBar (5 tabs), shared composables
+├── navigation/                       # NavGraph, Screen routes, BottomNavItem (5 tabs)
+├── di/                               # DatabaseModule, NetworkModule (Claude + GitHub Retrofit)
 └── worker/                           # WorkManager jobs (reminders, streak check)
 ```
 
@@ -132,7 +172,7 @@ app/src/main/
 
 ## Room Database Schema
 
-12 entities across 6 DAOs:
+14 entities across 7 DAOs (v2 migration adds Coach tables):
 
 - **UserProfile** — singleton, stores all onboarding data + coins + onboarding flag
 - **FoodItem** — cached food items from API/barcode, with color category
@@ -141,6 +181,8 @@ app/src/main/
 - **Course / Lesson / LessonProgress** — 3-week structured curriculum
 - **DailyTask / Streak / Achievement** — full gamification system
 - **Recipe / MealPlan** — recipe book + weekly planner
+- **CoachMessage** — full chat history with Jean
+- **CoachMemory** — key-value long-term memory (goals, milestones, preferences)
 
 ---
 
@@ -173,8 +215,10 @@ fun calculateColorCategory(caloriesPer100g, isWholeGrain): String
 |-----|-------------|-------|
 | OpenFoodFacts | No | Barcode lookup, product search |
 | USDA FoodData Central | DEMO_KEY (free) | Food nutrition search |
+| Claude Haiku | Yes (Anthropic) | KI-Coach Jean conversations |
+| GitHub Releases | No | Auto-update version check |
 
-Both APIs are only used to populate the local Room cache. The app works **100% offline** once data is cached.
+OpenFoodFacts and USDA are only used to populate the local Room cache. The app works **100% offline** once data is cached (Coach requires internet for AI responses).
 
 ---
 
@@ -184,40 +228,61 @@ Both APIs are only used to populate the local Room cache. The app works **100% o
 - Android Studio Meerkat or newer
 - Android SDK 26+
 - JDK 21
+- Claude API key (get one at console.anthropic.com)
 
 ### Setup
 ```bash
 git clone https://github.com/Pcf1337-hash/JeanFit.git
 cd JeanFit
-# Add local.properties with your SDK path:
+
+# Create local.properties with your SDK path and Claude API key:
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
-./gradlew assembleDebug
-```
+echo "CLAUDE_API_KEY=sk-ant-..." >> local.properties
 
-### APK
-The app builds arm64-v8a only (targets modern Galaxy S/A series) — roughly half the size of a universal APK.
-
-```bash
 ./gradlew assembleDebug
 # Output: app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
 ```
+
+### Download pre-built APK
+Get the latest signed APK from the [Releases page](https://github.com/Pcf1337-hash/JeanFit/releases/latest).
+
+Enable "Install from unknown sources" in Android settings before installing.
 
 ---
 
 ## Design System
 
-Custom Material 3 theme with JeanFit brand colors:
+Ocean Blue theme (v1.1.0+):
 
 | Token | Color | Usage |
 |-------|-------|-------|
-| SunsetOrange | `#FB513B` | CTAs, progress indicators, accents |
-| SpringWood | `#F6F4EE` | Warm cream background |
-| BlueDianne | `#1D3A44` | Headlines, dark text |
+| OceanBlue | `#1565C0` | Primary CTAs, accents |
+| SkyBlue | `#42A5F5` | Coach UI, highlights |
+| DeepNavy | `#0D2B4E` | Headlines, dark containers |
+| MidnightBlue | `#0A1929` | Dark backgrounds |
+| CoachCardDark | `#122136` | Coach message bubbles |
 | FoodGreen | `#4CAF50` | Green food category |
 | FoodYellow | `#FFC107` | Yellow food category |
 | FoodOrange | `#FF6B35` | Orange food category |
 
 Dark mode is fully supported on every screen.
+
+---
+
+## Auto-Update (for maintainers)
+
+To publish a new version:
+
+1. Bump `versionCode` and `versionName` in `app/build.gradle.kts`
+2. Build: `./gradlew assembleRelease`
+3. Create a GitHub release tagged `vX.Y.Z` with the APK as an asset
+4. Include release notes — the app will show them in the update modal
+
+To force an update (users cannot skip):
+```
+Include this line anywhere in the release notes:
+FORCED_UPDATE: true
+```
 
 ---
 

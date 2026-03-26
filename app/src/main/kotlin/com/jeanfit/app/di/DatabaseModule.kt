@@ -3,6 +3,7 @@ package com.jeanfit.app.di
 import android.content.Context
 import androidx.room.Room
 import com.jeanfit.app.data.db.JeanFitDatabase
+import com.jeanfit.app.data.db.dao.CoachDao
 import com.jeanfit.app.data.db.dao.FoodDao
 import com.jeanfit.app.data.db.dao.GamificationDao
 import com.jeanfit.app.data.db.dao.LessonDao
@@ -27,30 +28,29 @@ object DatabaseModule {
             context,
             JeanFitDatabase::class.java,
             JeanFitDatabase.DATABASE_NAME
-        ).build()
+        )
+            .addMigrations(JeanFitDatabase.MIGRATION_1_2)
+            .build()
     }
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideUserProfileDao(db: JeanFitDatabase): UserProfileDao = db.userProfileDao()
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideFoodDao(db: JeanFitDatabase): FoodDao = db.foodDao()
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideWeightDao(db: JeanFitDatabase): WeightDao = db.weightDao()
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideLessonDao(db: JeanFitDatabase): LessonDao = db.lessonDao()
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideGamificationDao(db: JeanFitDatabase): GamificationDao = db.gamificationDao()
 
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideRecipeDao(db: JeanFitDatabase): RecipeDao = db.recipeDao()
+
+    @Provides @Singleton
+    fun provideCoachDao(db: JeanFitDatabase): CoachDao = db.coachDao()
 }

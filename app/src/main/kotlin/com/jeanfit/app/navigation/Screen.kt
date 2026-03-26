@@ -43,4 +43,7 @@ sealed class Screen(val route: String) {
         fun createRoute(recipeId: String) = "main/tools/recipe/$recipeId"
     }
     data object MealPlanner : Screen("main/tools/meal_planner")
+
+    // KI-Coach
+    data object Coach : Screen("main/coach")
 }
