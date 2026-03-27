@@ -3,6 +3,7 @@ package com.jeanfit.app.ui.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,6 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,20 +44,18 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Einstellungen", fontWeight = FontWeight.Bold) },
+                title = { Text("Einstellungen", fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Zurück", tint = Color.White)
                     }
                 },
                 actions = {
                     TextButton(onClick = viewModel::save) {
-                        Text("Speichern", color = SunsetOrange, fontWeight = FontWeight.Bold)
+                        Text("Speichern", color = Color.White.copy(0.9f), fontWeight = FontWeight.Bold)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -61,10 +63,25 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding),
+                .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
+            // Ocean Blue Header
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Brush.verticalGradient(listOf(OceanBlue, DeepNavy)))
+                        .padding(top = padding.calculateTopPadding())
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    Text(
+                        "Dein Profil & Ziele",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                }
+            }
 
             // ── PROFIL ─────────────────────────────────────────────
             item { SettingsSectionHeader("👤 Mein Profil") }
@@ -116,7 +133,7 @@ fun SettingsScreen(
                             Icon(
                                 Icons.Filled.DirectionsRun,
                                 contentDescription = null,
-                                tint = SunsetOrange,
+                                tint = OceanBlue,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(Modifier.width(12.dp))
@@ -143,7 +160,7 @@ fun SettingsScreen(
                                 RadioButton(
                                     selected = state.activityLevel == key,
                                     onClick = { viewModel.setActivityLevel(key) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = SunsetOrange)
+                                    colors = RadioButtonDefaults.colors(selectedColor = OceanBlue)
                                 )
                                 Text(label, style = MaterialTheme.typography.bodySmall)
                             }
@@ -158,7 +175,7 @@ fun SettingsScreen(
                             Icon(
                                 Icons.Filled.TrendingDown,
                                 contentDescription = null,
-                                tint = SunsetOrange,
+                                tint = OceanBlue,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(Modifier.width(12.dp))
@@ -173,7 +190,7 @@ fun SettingsScreen(
                             onValueChange = viewModel::setGoalKgPerWeek,
                             valueRange = 0.25f..1.0f,
                             steps = 2,
-                            colors = SliderDefaults.colors(thumbColor = SunsetOrange, activeTrackColor = SunsetOrange),
+                            colors = SliderDefaults.colors(thumbColor = OceanBlue, activeTrackColor = OceanBlue),
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -202,9 +219,9 @@ fun SettingsScreen(
                         Spacer(Modifier.width(8.dp))
                         FilledTonalButton(
                             onClick = viewModel::recalculateCalories,
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = SunsetOrange.copy(alpha = 0.1f))
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = OceanBlue.copy(alpha = 0.1f))
                         ) {
-                            Text("Neu berechnen", color = SunsetOrange, style = MaterialTheme.typography.labelSmall)
+                            Text("Neu berechnen", color = OceanBlue, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -275,7 +292,7 @@ fun SettingsScreen(
 
             item {
                 SettingsCard {
-                    SettingsInfoRow(label = "Version", value = "1.2.0", icon = Icons.Filled.Info)
+                    SettingsInfoRow(label = "Version", value = "2.1.0", icon = Icons.Filled.Info)
                     HorizontalDivider(thickness = 0.5.dp)
                     SettingsInfoRow(label = "App-Name", value = "JeanFit", icon = Icons.Filled.FitnessCenter)
                 }
@@ -291,12 +308,12 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SunsetOrange),
+                    colors = ButtonDefaults.buttonColors(containerColor = OceanBlue),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Icon(Icons.Filled.Save, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Änderungen speichern", fontWeight = FontWeight.Bold)
+                    Text("Änderungen speichern", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -345,11 +362,12 @@ private fun SettingsTextField(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         leadingIcon = leadingIcon?.let { icon ->
-            { Icon(icon, contentDescription = null, tint = SunsetOrange, modifier = Modifier.size(20.dp)) }
+            { Icon(icon, contentDescription = null, tint = OceanBlue, modifier = Modifier.size(20.dp)) }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = SunsetOrange,
-            focusedLabelColor = SunsetOrange
+            focusedBorderColor = OceanBlue,
+            focusedLabelColor = OceanBlue,
+            cursorColor = OceanBlue
         )
     )
 }
@@ -368,7 +386,7 @@ private fun SettingsInfoRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = SunsetOrange, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = OceanBlue, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(12.dp))
             Text(label, style = MaterialTheme.typography.bodyMedium)
         }

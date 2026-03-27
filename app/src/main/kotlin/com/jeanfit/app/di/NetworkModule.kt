@@ -2,6 +2,10 @@ package com.jeanfit.app.di
 
 import com.jeanfit.app.BuildConfig
 import com.jeanfit.app.data.api.ClaudeApi
+import com.jeanfit.app.data.api.FatSecretFoodsWrapperAdapter
+import com.jeanfit.app.data.api.FatSecretServingsAdapter
+import com.jeanfit.app.data.api.FatSecretApi
+import com.jeanfit.app.data.api.FatSecretOAuthInterceptor
 import com.jeanfit.app.data.api.GithubApi
 import com.jeanfit.app.data.api.OpenFoodFactsApi
 import com.jeanfit.app.data.api.TheMealDbApi
@@ -114,4 +118,47 @@ object NetworkModule {
     @Singleton
     fun provideTheMealDbApi(@Named("MEALDB") retrofit: Retrofit): TheMealDbApi =
         retrofit.create(TheMealDbApi::class.java)
+
+    // ── FatSecret ────────────────────────────────────────────────────────────
+
+    @Provides
+    @Singleton
+    @Named("fatsecret")
+    fun provideFatSecretMoshi(): Moshi = Moshi.Builder()
+        .add(FatSecretServingsAdapter())
+        .add(FatSecretFoodsWrapperAdapter())
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
+
+    @Provides
+    @Singleton
+    @Named("fatsecret")
+    fun provideFatSecretOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(FatSecretOAuthInterceptor(BuildConfig.FATSECRET_KEY, BuildConfig.FATSECRET_SECRET))
+        .apply {
+            if (BuildConfig.DEBUG) {
+                addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
+            }
+        }
+        .build()
+
+    @Provides
+    @Singleton
+    @Named("FATSECRET")
+    fun provideFatSecretRetrofit(
+        @Named("fatsecret") client: OkHttpClient,
+        @Named("fatsecret") moshi: Moshi
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl("https://platform.fatsecret.com/")
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    @Provides
+    @Singleton
+    fun provideFatSecretApi(@Named("FATSECRET") retrofit: Retrofit): FatSecretApi =
+        retrofit.create(FatSecretApi::class.java)
 }

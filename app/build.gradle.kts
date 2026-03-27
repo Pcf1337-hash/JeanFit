@@ -21,8 +21,8 @@ android {
         applicationId = "com.jeanfit.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "2.0.0"
+        versionCode = 5
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -32,6 +32,9 @@ android {
         buildConfigField("String", "CLAUDE_API_KEY", "\"${localProperties["CLAUDE_API_KEY"] ?: ""}\"")
         buildConfigField("String", "CLAUDE_BASE_URL", "\"https://api.anthropic.com/\"")
         buildConfigField("String", "GITHUB_RELEASES_URL", "\"https://api.github.com/repos/Pcf1337-hash/JeanFit/releases/latest\"")
+        buildConfigField("String", "FATSECRET_KEY",    "\"${localProperties["FATSECRET_KEY"] ?: ""}\"")
+        buildConfigField("String", "FATSECRET_SECRET", "\"${localProperties["FATSECRET_SECRET"] ?: ""}\"")
+
     }
 
     signingConfigs {

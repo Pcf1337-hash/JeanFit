@@ -52,7 +52,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 80.dp)
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         // Gradient Header
         item {
@@ -352,6 +352,13 @@ private fun DailyTasksCard(
     task: com.jeanfit.app.data.db.entities.DailyTask?,
     onFinishDay: () -> Unit
 ) {
+    val doneCount = listOf(
+        task?.weightLogged == true,
+        task?.allMealsLogged == true,
+        task?.lessonCompleted == true
+    ).count { it }
+    val allDone = doneCount == 3
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -371,59 +378,80 @@ private fun DailyTasksCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                // Coin badge
-                if (task?.coinAwarded == true) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(CoinGold.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.MonetizationOn,
-                            contentDescription = null,
-                            tint = CoinGold,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            "+1 Coin!",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = CoinGold,
-                            fontWeight = FontWeight.Bold
-                        )
+                // Progress counter + Coin badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "$doneCount/3",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (allDone) OceanBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (task?.coinAwarded == true) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CoinGold.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Filled.MonetizationOn, null, tint = CoinGold, modifier = Modifier.size(14.dp))
+                            Text("+1 Coin!", style = MaterialTheme.typography.labelSmall, color = CoinGold, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
 
+            Spacer(Modifier.height(8.dp))
+
+            // Progress bar
+            LinearProgressIndicator(
+                progress = { doneCount / 3f },
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
+                color = if (allDone) OceanBlue else TealAccent,
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            )
+
             Spacer(Modifier.height(12.dp))
 
-            AnimatedTaskRow(
-                label = "Gewicht wiegen",
-                done = task?.weightLogged == true
-            )
+            AnimatedTaskRow(label = "Gewicht wiegen",    done = task?.weightLogged == true)
             Spacer(Modifier.height(4.dp))
-            AnimatedTaskRow(
-                label = "Mahlzeiten loggen",
-                done = task?.allMealsLogged == true
-            )
+            AnimatedTaskRow(label = "Mahlzeiten loggen", done = task?.allMealsLogged == true)
             Spacer(Modifier.height(4.dp))
-            AnimatedTaskRow(
-                label = "Lektion lesen",
-                done = task?.lessonCompleted == true
-            )
+            AnimatedTaskRow(label = "Lektion lesen",     done = task?.lessonCompleted == true)
 
+            // Abschluss-Button: nur sichtbar wenn Mahlzeiten noch nicht bestätigt
             if (task?.allMealsLogged == false) {
                 Spacer(Modifier.height(12.dp))
-                OutlinedButton(
+                Button(
                     onClick = onFinishDay,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = OceanBlue),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, OceanBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = OceanBlue)
                 ) {
-                    Text("Tag abschließen")
+                    Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Mahlzeiten abschließen")
                 }
+                if (doneCount < 2) {
+                    // Hinweis: andere Aufgaben noch offen
+                    Text(
+                        text = "Noch ${3 - doneCount} Aufgabe${if (3 - doneCount != 1) "n" else ""} offen für den Noomcoin",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            } else if (allDone && task?.coinAwarded == false) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Alle Aufgaben erledigt – Coin wird vergeben!",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = OceanBlue,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

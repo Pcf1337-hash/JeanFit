@@ -188,7 +188,6 @@ private fun FoodItemRow(item: FoodItem, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Left color dot (category indicator on the left)
         Box(
             modifier = Modifier
                 .size(12.dp)
@@ -196,12 +195,18 @@ private fun FoodItemRow(item: FoodItem, onClick: () -> Unit) {
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(item.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            if (item.brand != null) {
-                Text(
-                    item.brand,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (item.brand != null) {
+                    Text(
+                        item.brand,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                SourceBadge(source = item.source)
             }
         }
         Text(
@@ -209,7 +214,6 @@ private fun FoodItemRow(item: FoodItem, onClick: () -> Unit) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        // Right color dot indicator
         Box(
             modifier = Modifier
                 .size(10.dp)
@@ -217,6 +221,25 @@ private fun FoodItemRow(item: FoodItem, onClick: () -> Unit) {
         )
     }
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+}
+
+@Composable
+private fun SourceBadge(source: String) {
+    val (label, color) = when (source) {
+        "fatsecret"     -> "FS"  to Color(0xFF1565C0)
+        "openfoodfacts" -> "OFF" to Color(0xFF2E7D32)
+        "usda"          -> "USDA" to Color(0xFF6A1B9A)
+        "custom"        -> "Eigenes" to MaterialTheme.colorScheme.onSurfaceVariant
+        else            -> return
+    }
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelSmall,
+        color = color,
+        modifier = Modifier
+            .background(color.copy(alpha = 0.1f), shape = MaterialTheme.shapes.extraSmall)
+            .padding(horizontal = 4.dp, vertical = 1.dp)
+    )
 }
 
 @Composable
@@ -229,7 +252,17 @@ internal fun FoodDetailSheet(
     onDismiss: () -> Unit,
     isLogging: Boolean
 ) {
+    val defaultServing = item.defaultServingSizeG.coerceAtLeast(1f)
+    var portions by remember { mutableIntStateOf((servingSize / defaultServing).roundToInt().coerceAtLeast(1)) }
+
+    // Beim Ändern der Portionen die Grammzahl synchronisieren
+    fun updatePortions(newPortions: Int) {
+        portions = newPortions.coerceAtLeast(1)
+        onServingChange(portions * defaultServing)
+    }
+
     val factor = servingSize / 100f
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -246,27 +279,93 @@ internal fun FoodDetailSheet(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = servingSize.roundToInt().toString(),
-                    onValueChange = { it.toFloatOrNull()?.let(onServingChange) },
-                    label = { Text("Menge (${item.unit})") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1565C0),
-                        focusedLabelColor = Color(0xFF1565C0),
-                        cursorColor = Color(0xFF1565C0)
-                    )
+
+                // Portionen-Counter
+                Text(
+                    "Portionen",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FilledIconButton(
+                        onClick = { updatePortions(portions - 1) },
+                        enabled = portions > 1,
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = OceanBlue)
+                    ) {
+                        Icon(Icons.Filled.Remove, contentDescription = "Weniger")
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "$portions",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = OceanBlue
+                        )
+                        Text(
+                            "× ${defaultServing.roundToInt()} g = ${servingSize.roundToInt()} g",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    FilledIconButton(
+                        onClick = { updatePortions(portions + 1) },
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = OceanBlue)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Mehr")
+                    }
+                }
+
+                HorizontalDivider()
+
+                // Feine Gramm-Einstellung
+                Text(
+                    "Feinabstimmung (g)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = servingSize.roundToInt().toString(),
+                        onValueChange = { v ->
+                            v.toFloatOrNull()?.let { g ->
+                                onServingChange(g)
+                                portions = (g / defaultServing).roundToInt().coerceAtLeast(1)
+                            }
+                        },
+                        label = { Text("Gramm") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1565C0),
+                            focusedLabelColor = Color(0xFF1565C0),
+                            cursorColor = Color(0xFF1565C0)
+                        )
+                    )
+                }
                 Slider(
-                    value = servingSize,
-                    onValueChange = onServingChange,
-                    valueRange = 10f..500f,
+                    value = servingSize.coerceIn(10f, 1000f),
+                    onValueChange = { g ->
+                        onServingChange(g)
+                        portions = (g / defaultServing).roundToInt().coerceAtLeast(1)
+                    },
+                    valueRange = 10f..1000f,
                     modifier = Modifier.fillMaxWidth(),
                     colors = SliderDefaults.colors(thumbColor = OceanBlue, activeTrackColor = OceanBlue)
                 )
+
+                HorizontalDivider()
+
+                // Nährwerte
                 NutrientRow("Kalorien", "${(item.caloriesPer100g * factor).roundToInt()} kcal", OceanBlue)
                 NutrientRow("Protein", "${(item.proteinPer100g * factor).roundToInt()} g", FoodGreen)
                 NutrientRow("Kohlenhydrate", "${(item.carbsPer100g * factor).roundToInt()} g", FoodYellow)
