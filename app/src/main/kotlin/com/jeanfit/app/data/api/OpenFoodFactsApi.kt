@@ -15,8 +15,9 @@ interface OpenFoodFactsApi {
     suspend fun searchProducts(
         @Query("search_terms") query: String,
         @Query("json") json: Int = 1,
-        @Query("page_size") pageSize: Int = 20,
-        @Query("fields") fields: String = "product_name,brands,nutriments,serving_size,image_url,code"
+        @Query("page_size") pageSize: Int = 25,
+        @Query("fields") fields: String = "product_name,brands,nutriments,serving_size,image_url,code",
+        @Query("lc") lc: String = "de"
     ): Response<OFFSearchResponse>
 }
 

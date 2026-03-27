@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,23 +45,45 @@ fun ProgressScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Fortschritt", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF1565C0), Color(0xFF0D2B4E))
+                        )
+                    )
+                    .statusBarsPadding()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Fortschritt",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = viewModel::showAddDialog,
-                containerColor = SunsetOrange
+                containerColor = OceanBlue
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Gewicht eintragen", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Filled.Add, contentDescription = "Gewicht eintragen", tint = Color.White)
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (state.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = SunsetOrange)
+                CircularProgressIndicator(color = OceanBlue)
             }
             return@Scaffold
         }
@@ -71,20 +96,24 @@ fun ProgressScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                // Weight summary card
-                WeightSummaryCard(
+                // Hero card with gradient background
+                WeightHeroCard(
                     latest = state.latestWeight?.weightKg,
                     goal = state.goalWeightKg,
                     start = state.startWeightKg
                 )
             }
             item {
-                // Progress bar
+                // Progress bar in OceanBlue
                 WeightProgressBar(
                     current = state.latestWeight?.weightKg ?: state.startWeightKg,
                     start = state.startWeightKg,
                     goal = state.goalWeightKg
                 )
+            }
+            item {
+                // Period toggle chips
+                PeriodToggleRow()
             }
             item {
                 Row(
@@ -118,7 +147,7 @@ fun ProgressScreen(
                             Spacer(Modifier.height(8.dp))
                             Button(
                                 onClick = viewModel::showAddDialog,
-                                colors = ButtonDefaults.buttonColors(containerColor = SunsetOrange)
+                                colors = ButtonDefaults.buttonColors(containerColor = OceanBlue)
                             ) { Text("Jetzt eintragen") }
                         }
                     }
@@ -133,31 +162,89 @@ fun ProgressScreen(
 }
 
 @Composable
-private fun WeightSummaryCard(latest: Float?, goal: Float, start: Float) {
+private fun WeightHeroCard(latest: Float?, goal: Float, start: Float) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color(0xFF1A2E45), Color(0xFF0D2B4E))
+                    )
+                )
+                .padding(20.dp)
         ) {
-            WeightStat("Aktuell", latest?.let { "%.1f kg".format(it) } ?: "—", SunsetOrange)
-            WeightStat("Ziel", "%.1f kg".format(goal), FoodGreen)
-            if (latest != null) {
-                val diff = latest - goal
-                WeightStat("Noch", "%.1f kg".format(diff), if (diff <= 0) FoodGreen else FoodOrange)
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                WeightStat(
+                    label = "Aktuell",
+                    value = latest?.let { "%.1f kg".format(it) } ?: "—",
+                    color = OceanBlue
+                )
+                WeightStat(
+                    label = "Start",
+                    value = "%.1f kg".format(start),
+                    color = SkyBlue
+                )
+                WeightStat(
+                    label = "Ziel",
+                    value = "%.1f kg".format(goal),
+                    color = TealAccent
+                )
             }
         }
     }
 }
 
 @Composable
-private fun WeightStat(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+private fun WeightStat(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = color)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+private fun PeriodToggleRow() {
+    val periods = listOf("7T", "30T", "90T", "Gesamt")
+    var selectedPeriod by remember { mutableStateOf(0) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        periods.forEachIndexed { index, label ->
+            FilterChip(
+                selected = selectedPeriod == index,
+                onClick = { selectedPeriod = index },
+                label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = Color(0xFF1565C0),
+                    selectedLabelColor = Color.White,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    labelColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
     }
 }
 
@@ -177,20 +264,37 @@ private fun WeightProgressBar(current: Float, start: Float, goal: Float) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Gesamtfortschritt", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-                Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.titleSmall, color = SunsetOrange, fontWeight = FontWeight.Bold)
+                Text(
+                    "Gesamtfortschritt",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = OceanBlue,
+                    fontWeight = FontWeight.Bold
+                )
             }
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = SunsetOrange,
-                trackColor = SunsetOrange.copy(alpha = 0.2f)
+                color = OceanBlue,
+                trackColor = OceanBlue.copy(alpha = 0.2f)
             )
             Spacer(Modifier.height(4.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Start: %.1f kg".format(start), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Ziel: %.1f kg".format(goal), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "Start: %.1f kg".format(start),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Ziel: %.1f kg".format(goal),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -210,7 +314,7 @@ private fun WeightEntryRow(entry: WeightEntry, onDelete: () -> Unit) {
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(horizontalAlignment = Alignment.End) {
-                Text("%.1f kg".format(entry.weightKg), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = SunsetOrange)
+                Text("%.1f kg".format(entry.weightKg), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = OceanBlue)
                 entry.trendWeightKg?.let {
                     Text("Trend: %.1f kg".format(it), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -261,9 +365,9 @@ private fun WeightEntryDialog(
             Button(
                 onClick = onConfirm,
                 enabled = inputWeight.toFloatOrNull() != null && !isSaving,
-                colors = ButtonDefaults.buttonColors(containerColor = SunsetOrange)
+                colors = ButtonDefaults.buttonColors(containerColor = OceanBlue)
             ) {
-                if (isSaving) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                if (isSaving) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                 else Text("Speichern")
             }
         },
@@ -276,11 +380,33 @@ fun WeightHistoryScreen(onBack: () -> Unit, viewModel: ProgressViewModel = hiltV
     val state by viewModel.state.collectAsState()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Gewichtsverlauf", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Zurück") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF1565C0), Color(0xFF0D2B4E))
+                        )
+                    )
+                    .statusBarsPadding()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Zurück", tint = Color.White)
+                    }
+                    Text(
+                        "Gewichtsverlauf",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
         }
     ) { padding ->
         LazyColumn(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding)) {

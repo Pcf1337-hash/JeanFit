@@ -119,7 +119,9 @@ class AppUpdateManager @Inject constructor(
 
     suspend fun checkForUpdate(): Pair<Boolean, ReleaseInfo?> {
         val release = fetchLatestRelease() ?: return false to null
-        val hasUpdate = parseVersionCode(release.tagName) > getCurrentVersionCode()
+        // Compare using same semantic-version scheme, not the integer versionCode
+        val currentParsed = parseVersionCode("v${BuildConfig.VERSION_NAME}")
+        val hasUpdate = parseVersionCode(release.tagName) > currentParsed
         return hasUpdate to (if (hasUpdate) release else null)
     }
 

@@ -44,7 +44,7 @@ import com.jeanfit.app.data.db.entities.WeightEntry
         CoachMessage::class,
         CoachMemory::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class JeanFitDatabase : RoomDatabase() {
@@ -80,6 +80,15 @@ abstract class JeanFitDatabase : RoomDatabase() {
                         updatedAt INTEGER NOT NULL
                     )
                 """.trimIndent())
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Lebensmittelname in Log-Einträgen speichern (denormalisiert für schnelle Anzeige)
+                db.execSQL("ALTER TABLE food_log_entries ADD COLUMN foodName TEXT NOT NULL DEFAULT ''")
+                // Einheit (g oder ml) für Lebensmittel
+                db.execSQL("ALTER TABLE food_items ADD COLUMN unit TEXT NOT NULL DEFAULT 'g'")
             }
         }
     }

@@ -23,6 +23,7 @@ data class FoodItem(
     val colorCategory: String,
     val calorieDensity: Float,
     val source: String = "custom",
+    val unit: String = "g",         // "g" für Feststoffe, "ml" für Getränke
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -41,6 +42,7 @@ data class FoodItem(
 data class FoodLogEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val foodId: String,
+    val foodName: String = "",      // denormalisiert für schnelle Anzeige
     val mealType: String,
     val servingMultiplier: Float = 1f,
     val servingSizeG: Float,

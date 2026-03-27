@@ -2,6 +2,7 @@ package com.jeanfit.app.ui.coach
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -20,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,7 +38,6 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,8 +45,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -82,7 +82,6 @@ private val QUICK_REPLIES = listOf(
     "🎉 Ich habe mein Ziel erreicht!"
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoachChatScreen(
     onBack: () -> Unit = {},
@@ -103,7 +102,7 @@ fun CoachChatScreen(
 
     Scaffold(
         topBar = {
-            CoachTopBar(onClearChat = viewModel::clearChat)
+            CoachGradientHeader(onClearChat = viewModel::clearChat)
         },
         containerColor = MidnightBlue
     ) { innerPadding ->
@@ -168,41 +167,61 @@ fun CoachChatScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CoachTopBar(onClearChat: () -> Unit) {
-    TopAppBar(
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Jean-Avatar
+private fun CoachGradientHeader(onClearChat: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF1565C0), Color(0xFF0D2B4E))
+                )
+            )
+            .statusBarsPadding()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Avatar circle
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(listOf(SkyBlue, OceanBlue))
-                        ),
+                        .size(48.dp)
+                        .background(Color(0xFF0D2B4E), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("J", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("🤖", fontSize = 24.sp)
                 }
-                Spacer(Modifier.width(10.dp))
                 Column {
                     Text(
                         "Jean",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        "Dein persönlicher Coach",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = SkyBlue
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(Color(0xFF00E676), CircleShape)
+                        )
+                        Text(
+                            "Dein persönlicher Coach",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
                 }
             }
-        },
-        actions = {
             IconButton(onClick = onClearChat) {
                 Icon(
                     Icons.Filled.DeleteSweep,
@@ -210,11 +229,8 @@ private fun CoachTopBar(onClearChat: () -> Unit) {
                     tint = SkyBlue
                 )
             }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = CoachCardDark
-        )
-    )
+        }
+    }
 }
 
 @Composable
@@ -278,7 +294,7 @@ private fun MessageBubble(message: CoachMessage) {
 }
 
 @Composable
-private fun TypingIndicator() {
+fun TypingIndicator() {
     val infiniteTransition = rememberInfiniteTransition(label = "typing")
     Row(
         verticalAlignment = Alignment.Bottom,
@@ -292,22 +308,26 @@ private fun TypingIndicator() {
                 .background(CoachCardDark)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 repeat(3) { index ->
-                    val alpha by infiniteTransition.animateFloat(
-                        initialValue = 0.3f,
-                        targetValue = 1f,
+                    val offsetY by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = -8f,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(600, delayMillis = index * 200),
-                            repeatMode = RepeatMode.Reverse
+                            animation = tween(400),
+                            repeatMode = RepeatMode.Reverse,
+                            initialStartOffset = StartOffset(index * 133)
                         ),
-                        label = "dot_$index"
+                        label = "dot$index"
                     )
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .clip(CircleShape)
-                            .background(SkyBlue.copy(alpha = alpha))
+                            .offset(y = offsetY.dp)
+                            .background(Color(0xFF42A5F5), CircleShape)
                     )
                 }
             }

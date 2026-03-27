@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
             JeanFitTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
                 val startDestination = if (onboardingCompleted)
-                    Screen.Home.route else Screen.Welcome.route
+                    Screen.Home.route else "onboarding_graph"
 
                 val mainRoutes = BottomNavItem.items.map { it.screen.route }.toSet()
 
@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
                         isDownloading = updateState.isDownloading,
                         downloadProgress = updateState.downloadProgress,
                         currentVersion = updateViewModel.getCurrentVersion(),
+                        error = updateState.error,
                         onUpdate = { updateViewModel.startDownloadAndInstall() },
                         onDismiss = { updateViewModel.dismiss() },
                         onSkip = { updateViewModel.skipVersion() }

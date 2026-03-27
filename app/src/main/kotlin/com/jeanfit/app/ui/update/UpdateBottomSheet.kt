@@ -58,6 +58,7 @@ fun UpdateBottomSheet(
     isDownloading: Boolean,
     downloadProgress: Int,          // 0–100
     currentVersion: String,
+    error: String? = null,
     onUpdate: () -> Unit,
     onDismiss: () -> Unit,
     onSkip: () -> Unit
@@ -216,6 +217,25 @@ fun UpdateBottomSheet(
                     )
                 }
                 Spacer(Modifier.height(20.dp))
+            }
+
+            // Fehleranzeige
+            if (error != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(StreakFire.copy(alpha = 0.15f))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        error,
+                        color = StreakFire,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
             }
 
             // Update-Button

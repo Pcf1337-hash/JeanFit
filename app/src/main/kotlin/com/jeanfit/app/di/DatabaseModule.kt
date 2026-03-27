@@ -29,7 +29,7 @@ object DatabaseModule {
             JeanFitDatabase::class.java,
             JeanFitDatabase.DATABASE_NAME
         )
-            .addMigrations(JeanFitDatabase.MIGRATION_1_2)
+            .addMigrations(JeanFitDatabase.MIGRATION_1_2, JeanFitDatabase.MIGRATION_2_3)
             .build()
     }
 

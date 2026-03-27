@@ -4,6 +4,7 @@ import com.jeanfit.app.BuildConfig
 import com.jeanfit.app.data.api.ClaudeApi
 import com.jeanfit.app.data.api.GithubApi
 import com.jeanfit.app.data.api.OpenFoodFactsApi
+import com.jeanfit.app.data.api.TheMealDbApi
 import com.jeanfit.app.data.api.UsdaFoodApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -99,4 +100,18 @@ object NetworkModule {
     @Singleton
     fun provideGithubApi(@Named("GITHUB") retrofit: Retrofit): GithubApi =
         retrofit.create(GithubApi::class.java)
+
+    @Provides
+    @Singleton
+    @Named("MEALDB")
+    fun provideMealDbRetrofit(client: OkHttpClient, moshi: Moshi): Retrofit = Retrofit.Builder()
+        .baseUrl("https://www.themealdb.com/")
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    @Provides
+    @Singleton
+    fun provideTheMealDbApi(@Named("MEALDB") retrofit: Retrofit): TheMealDbApi =
+        retrofit.create(TheMealDbApi::class.java)
 }

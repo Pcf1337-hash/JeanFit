@@ -73,17 +73,22 @@ class UpdateViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _state.update { it.copy(isDownloading = true, downloadProgress = 0, error = null) }
-            try {
-                val apkFile = updateManager.downloadApkWithProgress(release.downloadUrl) { progress ->
+            val apkFile = try {
+                updateManager.downloadApkWithProgress(release.downloadUrl) { progress ->
                     _state.update { it.copy(downloadProgress = progress) }
                 }
-                _state.update { it.copy(isDownloading = false) }
-                updateManager.installApk(apkFile)
             } catch (e: Exception) {
                 _state.update { it.copy(
                     isDownloading = false,
                     error = "Download fehlgeschlagen: ${e.message}"
                 )}
+                return@launch
+            }
+            _state.update { it.copy(isDownloading = false) }
+            try {
+                updateManager.installApk(apkFile)
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "Installation fehlgeschlagen: ${e.message}") }
             }
         }
     }

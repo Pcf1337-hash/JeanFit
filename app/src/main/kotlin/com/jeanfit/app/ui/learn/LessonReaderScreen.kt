@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -12,6 +13,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,19 +34,50 @@ fun LessonReaderScreen(
     val state by viewModel.lessonReaderState.collectAsState()
     var quizAnswers by remember { mutableStateOf(mapOf<Int, Int>()) }
     var quizFeedback by remember { mutableStateOf(mapOf<Int, Boolean>()) }
+    val listState = rememberLazyListState()
+
+    // Calculate scroll progress for the reading progress indicator
+    val scrollProgress by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            if (totalItems == 0) return@derivedStateOf 0f
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            (lastVisibleIndex + 1).toFloat() / totalItems.toFloat()
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(state.lesson?.title ?: "Lektion", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Zurück") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(state.lesson?.title ?: "Lektion", fontWeight = FontWeight.SemiBold)
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Filled.ArrowBack, "Zurück")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+                // Reading progress bar
+                LinearProgressIndicator(
+                    progress = { scrollProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp),
+                    color = Color(0xFF1565C0),
+                    trackColor = Color(0xFF1E3A5F)
+                )
+            }
         }
     ) { padding ->
         if (state.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = SunsetOrange)
+                CircularProgressIndicator(color = OceanBlue)
             }
             return@Scaffold
         }
@@ -50,7 +85,11 @@ fun LessonReaderScreen(
         val blocks = parseContentBlocks(lesson.contentJson)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding),
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -88,22 +127,42 @@ fun LessonReaderScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(Icons.Filled.CheckCircle, null, tint = FoodGreen)
-                            Text("Lektion abgeschlossen!", color = FoodGreen, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Lektion abgeschlossen!",
+                                color = FoodGreen,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 } else {
-                    Button(
-                        onClick = {
-                            viewModel.completeLesson(lessonId, lesson.coinsReward)
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SunsetOrange)
+                    // Gradient button for completing the lesson
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFF1565C0), Color(0xFF00BCD4))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            if (lesson.coinsReward > 0) "Abschließen (+${lesson.coinsReward} Coins)"
-                            else "Lektion abschließen",
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Button(
+                            onClick = {
+                                viewModel.completeLesson(lessonId, lesson.coinsReward)
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp)
+                        ) {
+                            Text(
+                                if (lesson.coinsReward > 0) "Abschließen (+${lesson.coinsReward} Coins)"
+                                else "Lektion abschließen",
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -128,18 +187,28 @@ private fun TextBlock(content: String) {
 
 @Composable
 private fun TipBlock(icon: String, content: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = SunsetOrange.copy(alpha = 0.08f))
+    // OceanBlue left bar, DarkSurface2 background
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1A2E45), RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(icon, style = MaterialTheme.typography.titleMedium)
-            Text(
-                content.replace("**", "").trim(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .defaultMinSize(minHeight = 40.dp)
+                .background(Color(0xFF1565C0), RoundedCornerShape(2.dp))
+        )
+        Text(icon, style = MaterialTheme.typography.titleMedium)
+        Text(
+            content.replace("**", "").trim(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -158,7 +227,12 @@ private fun QuizBlock(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Quiz", style = MaterialTheme.typography.labelMedium, color = SunsetOrange, fontWeight = FontWeight.Bold)
+            Text(
+                "Quiz",
+                style = MaterialTheme.typography.labelMedium,
+                color = OceanBlue,
+                fontWeight = FontWeight.Bold
+            )
             Text(question, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             options.forEachIndexed { index, option ->
                 val isSelected = selectedIndex == index
@@ -196,7 +270,7 @@ private fun QuizBlock(
 private fun ActivityBlock(title: String, instruction: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = BlueDianne.copy(alpha = 0.08f))
+        colors = CardDefaults.cardColors(containerColor = OceanBlue.copy(alpha = 0.08f))
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("🎯 $title", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -213,7 +287,12 @@ private fun ReflectionBlock(prompt: String) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("💭 Reflektion", style = MaterialTheme.typography.labelMedium, color = BlueDianne, fontWeight = FontWeight.Bold)
+            Text(
+                "💭 Reflektion",
+                style = MaterialTheme.typography.labelMedium,
+                color = DeepNavy,
+                fontWeight = FontWeight.Bold
+            )
             Text(prompt, style = MaterialTheme.typography.bodyMedium)
             OutlinedTextField(
                 value = text,
@@ -221,7 +300,12 @@ private fun ReflectionBlock(prompt: String) {
                 placeholder = { Text("Deine Gedanken...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1565C0),
+                    focusedLabelColor = Color(0xFF1565C0),
+                    cursorColor = Color(0xFF1565C0)
+                )
             )
         }
     }

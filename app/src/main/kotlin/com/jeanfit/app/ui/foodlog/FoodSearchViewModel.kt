@@ -79,6 +79,7 @@ class FoodSearchViewModel @Inject constructor(
             val factor = serving / 100f
             val entry = FoodLogEntry(
                 foodId = item.foodId,
+                foodName = item.name,
                 mealType = mealType,
                 servingMultiplier = serving / item.defaultServingSizeG,
                 servingSizeG = serving,
@@ -93,6 +94,20 @@ class FoodSearchViewModel @Inject constructor(
             _state.update { it.copy(isLogging = false, logSuccess = true, selectedItem = null) }
         }
     }
+
+    fun searchByBarcode(barcode: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSearching = true, error = null) }
+            val item = foodRepository.getByBarcode(barcode)
+            if (item != null) {
+                _state.update { it.copy(selectedItem = item, servingSize = item.defaultServingSizeG, isSearching = false) }
+            } else {
+                _state.update { it.copy(isSearching = false, error = "Produkt nicht gefunden. Bitte manuell suchen.") }
+            }
+        }
+    }
+
+    fun clearError() = _state.update { it.copy(error = null) }
 
     fun addCustomFood(name: String, caloriesPer100g: Float, protein: Float, carbs: Float, fat: Float) {
         viewModelScope.launch {
